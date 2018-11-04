@@ -32,6 +32,7 @@ void all_cams_destroyer(struct all_cams* cams);
 struct cam_config *init_cam_config(void);
 void delete_cam(struct cam_config *cur_cam);
 
+// screen -d -m -S record ffmpeg -rtsp_transport tcp -i rtsp://admin:qwerty1234@192.168.1.188:554/ch01.264?ptype=tcp -acodec copy -f segment -segment_time 10 -segment_format avi -reset_timestamps 1 -copyts -flags global_header -strftime 1 /home/alexander/TEMP/%Y-%m-%d_%H-%M-%S.mkv
 
 // host cam-1ka-1 { hardware ethernet 9a:f8:b3:cc:6d:6b; fixed-address 10.55.245.11;}
 // host cam-1ka-2 { hardware ethernet 1c:94:10:a7:c4:14; fixed-address 10.55.245.12;}
@@ -58,7 +59,7 @@ int main()
 
 	printf("Enter log adress\n");
 	scanf("%s", log_file);
-	Log_file = fopen(log_file, "a");
+	Log_file = fopen(log_file, "a+");
 
 	struct all_cams* cams = cams_initiator(amount_of_cams);
 
@@ -85,7 +86,10 @@ int main_record_cycle(struct all_cams* cams)
 	pid_t child_pid = fork();
 	time_t t = time(NULL);
 	struct tm* aTm = localtime(&t);
-
+	char command_str[1000] = {};
+	snprintf(command_str, sizeof(command_str), "%s/logs.txt", cams->massive[0]->c_rec_adr); // TEST
+	FILE *local_log = fopen(command_str, "a+");
+	
 	while(is_going == true)
 	{
 		if(child_pid != 0) 	// roditel
@@ -112,18 +116,21 @@ int main_record_cycle(struct all_cams* cams)
 		{
 			if(is_record_start == false)
 			{
-				fprintf(Log_file, "\"%d-%d %d-%d-%d\" - record start\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec);
+				//fprintf(local_log, "\"%d-%d %d-%d-%d\" - record start\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec);
 				start_record(cams);
 				is_record_start = true;
-				sleep(cams->massive[0]->copy_delay); 
+				sleep(cams->massive[0]->copy_delay); //
 			}
 
 			//  copy here
-			sleep(cams->massive[0]->copy_delay); 
+			sleep(cams->massive[0]->copy_delay); //
+			//fprintf(local_log, "\"%d-%d %d-%d-%d\" - move start\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec);
 			copy_record(cams);
+			//fprintf(local_log, "\"%d-%d %d-%d-%d\" - move end\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec);
 		}
 	}
 
+	fclose(local_log);
 	return 0;
 }
 
@@ -138,11 +145,13 @@ int copy_record(struct all_cams* cams)
 
 	while(cam_num != max_cams)
 	{
-		fprintf(Log_file, "\"%d-%d %d-%d-%d\" - move start for cam %d\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec, cam_num);
+		//fprintf(Log_file, "\"%d-%d %d-%d-%d\" - move start for cam %d\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec, cam_num);
 		snprintf(command_str, sizeof(command_str), "./move %s +%d %s", cams->massive[cam_num]->rec_adr, (cams->massive[cam_num]->delay / 60) + 1, cams->massive[cam_num]->c_rec_adr);
 		system(command_str);
-		fprintf(Log_file, "\"%d-%d %d-%d-%d\" - move end for cam %d\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec, cam_num);
-
+		//fprintf(Log_file, "\"%d-%d %d-%d-%d\" - move end for cam %d\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec, cam_num);
+		snprintf(command_str, sizeof(command_str), "./clear_old %s +60", cams->massive[cam_num]->c_rec_adr);
+		system(command_str);
+		sleep(3); // Test sleep
 		cam_num++;
 	}
 }
@@ -155,6 +164,8 @@ int start_record(struct all_cams *cams)
 	while(i != cams->maximum)
 	{
 		snprintf(command_str, sizeof(command_str), "screen -d -m -S record ffmpeg -rtsp_transport tcp -i rtsp:/%s/ch01.264?ptype=tcp -acodec copy -f segment -segment_time %d -segment_format avi -reset_timestamps 1 -copyts -flags global_header -strftime 1 %s%s",cams->massive[i]->cam_adr, cams->massive[i]->delay,  cams->massive[i]->rec_adr, "/%Y-%m-%d_%H-%M-%S.avi");
+		printf("### <%s> \n",command_str);
+		system("screen -list");
 
 		system(command_str);
 		i++;
@@ -183,6 +194,7 @@ struct all_cams* cams_initiator(int max_cams)
 
 		if(cams->massive[i] == NULL)
 		{
+			printf("Error in init!!\n");
 			all_cams_destroyer(cams);
 			return NULL;
 		}
