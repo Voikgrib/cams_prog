@@ -1,0 +1,4 @@
+#!/bin/bash
+echo 'Enter <login>:<password>@<ip>:<port> of cam'
+
+find $1 -mmin $2 -exec mv {} $3 \;

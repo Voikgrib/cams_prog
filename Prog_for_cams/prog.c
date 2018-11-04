@@ -6,6 +6,7 @@
 #include <time.h>
 
 const int Max_str_len = 1000;
+FILE *Log_file = NULL;
 
 struct cam_config
 {
@@ -31,6 +32,8 @@ void all_cams_destroyer(struct all_cams* cams);
 struct cam_config *init_cam_config(void);
 void delete_cam(struct cam_config *cur_cam);
 
+// screen -d -m -S record ffmpeg -rtsp_transport tcp -i rtsp://admin:qwerty1234@192.168.1.188:554/ch01.264?ptype=tcp -acodec copy -f segment -segment_time 10 -segment_format avi -reset_timestamps 1 -copyts -flags global_header -strftime 1 /home/alexander/TEMP/%Y-%m-%d_%H-%M-%S.mkv
+
 // host cam-1ka-1 { hardware ethernet 9a:f8:b3:cc:6d:6b; fixed-address 10.55.245.11;}
 // host cam-1ka-2 { hardware ethernet 1c:94:10:a7:c4:14; fixed-address 10.55.245.12;}
 
@@ -44,14 +47,19 @@ void delete_cam(struct cam_config *cur_cam);
 int main()
 {
 	int amount_of_cams = 0;
+	char log_file[100] = {};
 
-	printf("How many cams you need?");
+	printf("How many cams you need?\n");
 	scanf("%d", &amount_of_cams);
 	if(amount_of_cams <= 0)
 	{
 		perror("Invalid amount of cams!");
 		return -1;
 	}
+
+	printf("Enter log adress\n");
+	scanf("%s", log_file);
+	Log_file = fopen(log_file, "a");
 
 	struct all_cams* cams = cams_initiator(amount_of_cams);
 
@@ -76,6 +84,8 @@ int main_record_cycle(struct all_cams* cams)
 	bool is_record_start = false;
 	char command = 0;
 	pid_t child_pid = fork();
+	time_t t = time(NULL);
+	struct tm* aTm = localtime(&t);
 
 	while(is_going == true)
 	{
@@ -88,6 +98,8 @@ int main_record_cycle(struct all_cams* cams)
 			if(command == 'k')
 			{
 				// last copy
+				fprintf(Log_file, "\"%d-%d %d-%d-%d\" - end of prog working\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec); // log printf
+				fclose(Log_file);
 				all_cams_destroyer(cams);
 				system("killall screen");
 				return 0;
@@ -101,13 +113,15 @@ int main_record_cycle(struct all_cams* cams)
 		{
 			if(is_record_start == false)
 			{
+				fprintf(Log_file, "\"%d-%d %d-%d-%d\" - record start\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec);
 				start_record(cams);
 				is_record_start = true;
+				sleep(cams->massive[0]->copy_delay); 
 			}
 
 			//  copy here
-			copy_record(cams);
 			sleep(cams->massive[0]->copy_delay); 
+			copy_record(cams);
 		}
 	}
 
@@ -125,8 +139,10 @@ int copy_record(struct all_cams* cams)
 
 	while(cam_num != max_cams)
 	{
+		fprintf(Log_file, "\"%d-%d %d-%d-%d\" - move start for cam %d\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec, cam_num);
 		snprintf(command_str, sizeof(command_str), "./move %s +%d %s", cams->massive[cam_num]->rec_adr, (cams->massive[cam_num]->delay / 60) + 1, cams->massive[cam_num]->c_rec_adr);
 		system(command_str);
+		fprintf(Log_file, "\"%d-%d %d-%d-%d\" - move end for cam %d\n", aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec, cam_num);
 
 		cam_num++;
 	}
@@ -172,18 +188,19 @@ struct all_cams* cams_initiator(int max_cams)
 			return NULL;
 		}
 
-		while(accept != 'Y')
-		{
-			accept = 0;
-			printf("Please enter \"delay copy_delay ip_of_cam(<login>:<password>@<ip>:<port>) adress_for_load adress_for_copy\"\n");
-			scanf("%d %d %s %s %s", &cams->massive[i]->delay, &cams->massive[i]->copy_delay, cams->massive[i]->cam_adr, cams->massive[i]->rec_adr, cams->massive[i]->c_rec_adr);
-			printf("\n# Camera %d\n# delay:%d\n# copy delay:%d\n# camera adress:%s\n# record adress:%s\n# adress for copy:%s\n\n", i, cams->massive[i]->delay, cams->massive[i]->copy_delay, cams->massive[i]->cam_adr, cams->massive[i]->rec_adr, cams->massive[i]->c_rec_adr);
-			printf("> Are camera config correct? (Y/n)");
-			accept = getchar();
+		//while(accept != 'Y')
+		//{
+		//	accept = 0;
+		printf("Please enter \"delay copy_delay ip_of_cam(<login>:<password>@<ip>:<port>) adress_for_load adress_for_copy\"\n>");
+		scanf("%d %d %s %s %s", &cams->massive[i]->delay, &cams->massive[i]->copy_delay, cams->massive[i]->cam_adr, cams->massive[i]->rec_adr, cams->massive[i]->c_rec_adr);
+		printf("\n# Camera %d\n# delay:%d\n# copy delay:%d\n# camera adress:%s\n# record adress:%s\n# adress for copy:%s\n\n", i, cams->massive[i]->delay, cams->massive[i]->copy_delay, cams->massive[i]->cam_adr, cams->massive[i]->rec_adr, cams->massive[i]->c_rec_adr);
+		printf("\n>");
+		//printf("> Are camera config correct? (Y/n)");
+		//	accept = getchar();
 
-			if(accept == 'n')
-				return NULL;
-		}
+		//	if(accept == 'n')
+		//		return NULL;
+		//}
 
 		i++;
 	}
