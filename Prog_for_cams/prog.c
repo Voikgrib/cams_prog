@@ -32,7 +32,6 @@ void all_cams_destroyer(struct all_cams* cams);
 struct cam_config *init_cam_config(void);
 void delete_cam(struct cam_config *cur_cam);
 
-// screen -d -m -S record ffmpeg -rtsp_transport tcp -i rtsp://admin:qwerty1234@192.168.1.188:554/ch01.264?ptype=tcp -acodec copy -f segment -segment_time 10 -segment_format avi -reset_timestamps 1 -copyts -flags global_header -strftime 1 /home/alexander/TEMP/%Y-%m-%d_%H-%M-%S.mkv
 
 // host cam-1ka-1 { hardware ethernet 9a:f8:b3:cc:6d:6b; fixed-address 10.55.245.11;}
 // host cam-1ka-2 { hardware ethernet 1c:94:10:a7:c4:14; fixed-address 10.55.245.12;}
