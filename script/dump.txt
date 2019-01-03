@@ -1,0 +1,4 @@
+There are screens on:
+	2736.record	(03.01.2019 16:13:28)	(Detached)
+	2730.record	(03.01.2019 16:13:28)	(Detached)
+2 Sockets in /run/screen/S-root.

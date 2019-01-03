@@ -1,0 +1,18 @@
+# Put me at /etc/systemd/system/ (see for your distributive),
+# replace User and paths at ExecStart
+# and run:
+# $ sudo systemctl enable cameras.service
+# $ sudo systemctl start cameras.service
+#
+# This service starts camera record & clear old video
+
+[Unit]
+Description=Camera-server
+
+[Service]
+ExecStart=/home/voik/cams/script/record_server_edition.sh /home/voik/cams/script/cameras.config &
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+
