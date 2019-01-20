@@ -5,11 +5,14 @@
 # $ sudo systemctl start cameras.service
 #
 # This service starts camera record & clear old video
+#
+# Change file adress, when you use it
 
 [Unit]
 Description=Camera-server
 
 [Service]
+ExecStart=chmod ugo+x record_server_edition.sh
 ExecStart=/home/voik/cams/script/record_server_edition.sh /home/voik/cams/script/cameras.config &
 Restart=on-abort
 
