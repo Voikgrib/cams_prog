@@ -86,7 +86,7 @@ fi
 
 # Print parsed config
 
-echo "	cloud_dir                = $cloud_dir"						> $LOGFILE
+#echo "	cloud_dir                = $cloud_dir"						> $LOGFILE
 echo "	temp_dir                 = $temp_dir"						> $LOGFILE
 echo "	segment_duration   	 	 = $segment_duration"				> $LOGFILE
 echo "	days_for_segment_to_live = $days_for_segment_to_live"		> $LOGFILE
@@ -94,7 +94,7 @@ for i in $(seq $CAM_NUM)
 do
 	ADDRESS_VAR_NAME="camera_"$i"_address"
 	echo "	camera_${i}_address         = ${!ADDRESS_VAR_NAME}"		> $LOGFILE
-	mkdir -p "$cloud_dir/camera_$i"
+	#mkdir -p "$cloud_dir/camera_$i"
 	mkdir -p "$temp_dir/camera_$i"
 done
 
@@ -141,7 +141,7 @@ do
 	for i in $(seq $CAM_NUM)
 	do
 		temp_min=$(bc <<< "$segment_duration / 60 + 1")
-		find "$cloud_dir/camera_$i" -type f -mtime +$days_for_segment_to_live -exec rm -- '{}' \;
+		find "$temp_dir/camera_$i" -type f -mtime +$days_for_segment_to_live -exec rm -- '{}' \;
 		# find "$temp_dir/camera_$i" -type f -mmin +$temp_min -exec mv -- '{}' "$cloud_dir/camera_$i" \;
 	done
 
