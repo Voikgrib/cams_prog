@@ -15,6 +15,7 @@ Description=Camera-server
 ExecStart=chmod ugo+x record_server_edition.sh
 ExecStart=/home/voik/cams/script/record_server_edition.sh /home/voik/cams/script/cameras.config &
 Restart=on-abort
+ExecStop=killall screen
 
 [Install]
 WantedBy=multi-user.target
