@@ -5,7 +5,6 @@ export LOGFILE=/home/voik/cams/script/dump.txt
 echo " >>> Only local saves, cloud not implemented!" 	> $LOGFILE
 echo "Kill old cameras..." 								> $LOGFILE
 echo ""													> $LOGFILE
-killall screen # to refresh cams
 
 prompt()
 {
