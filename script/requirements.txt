@@ -1,0 +1,4 @@
+bc
+psmisc
+ffmpeg ffmpeg-devel
+screen
