@@ -1,2 +1,3 @@
 # cams_prog
-12
+
+When you use something, please change pathes to files in config & service file
