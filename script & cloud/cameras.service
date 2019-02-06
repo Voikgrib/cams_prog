@@ -1,0 +1,22 @@
+# Put me at /etc/systemd/system/ (see for your distributive),
+# replace User and paths at ExecStart
+# and run:
+# $ sudo systemctl enable cameras.service
+# $ sudo systemctl start cameras.service
+#
+# This service starts camera record & clear old video
+#
+# Change file adress, when you use it
+
+[Unit]
+Description=Camera-server
+
+[Service]
+ExecStart=/usr/bin/google-drive-ocamlfuse #cloud full adress here
+ExecStart=/usr/bin/chmod ugo+x record_server_edition.sh
+ExecStart=/home/voik/cams/script/record_server_edition.sh /home/voik/cams/script/cameras.config &
+Restart=on-abort
+ExecStop=/usr/bin/killall screen
+
+[Install]
+WantedBy=multi-user.target
