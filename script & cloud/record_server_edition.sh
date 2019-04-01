@@ -99,7 +99,7 @@ echo
 
 prompt
 
-#Start recording
+# Start recording
 
 for i in $(seq $CAM_NUM)
 do
@@ -120,10 +120,21 @@ do
 		-strftime 1 \
 		$temp_dir/camera_$i/record_%Y-%m-%d_%H-%M-%S.avi		> $LOGFILE
 
-	#screen -list #debug
+	# screen -list #debug
 
-	#echo "`date +\"[%D %H:%M:%S]\"` Cam #$i(${!ADDRESS_VAR_NAME}): screen return code: $?"
+	# echo "`date +\"[%D %H:%M:%S]\"` Cam #$i(${!ADDRESS_VAR_NAME}): screen return code: $?"
 	echo
+done
+
+DATE=`date '+%Y-%m-%d'`
+
+for i in $(seq $CAM_NUM)
+do
+	test -e "$cloud_dir/camera_$i/$DATE"
+	if [ $? -ne 0 ]
+	then
+		mkdir -p "$cloud_dir/camera_$i/$DATE"
+	fi
 done
 
 # Regular sleep time
@@ -135,26 +146,42 @@ sleep $FIRST_SLEEP_TIME
 
 while :
 do
-	#SLEEP_TIME=$(($segment_duration))
-	#echo "`date +\"[%D %H:%M:%S]\"` Sleep for $SLEEP_TIME" > $LOGFILE
+	# SLEEP_TIME=$(($segment_duration))
+	# echo "`date +\"[%D %H:%M:%S]\"` Sleep for $SLEEP_TIME" > $LOGFILE
 
 	screen -list > $LOGFILE #debug
 
 	# nado pofixsit prava dostupa
-	#find "$temp_dir/camera_$i" -type f -mmin +$segment_duration -exec mv -- '{}' $cloud_dir \;
+	# find "$temp_dir/camera_$i" -type f -mmin +$segment_duration -exec mv -- '{}' $cloud_dir \;
+
+	DATE=`date '+%Y-%m-%d'`
 
 	for i in $(seq $CAM_NUM)
 	do
 		temp_min=$(bc <<< "$segment_duration / 60 + 1")
 		find "$cloud_dir/camera_$i" -type f -mtime +$days_for_segment_to_live -exec rm -- '{}' \;
-		find "$temp_dir/camera_$i" -type f -mmin +$temp_min -exec mv -- '{}' "$cloud_dir/camera_$i" \;
+
+		test -e "$cloud_dir/camera_$i/$DATE"
+		if [ $? -ne 0 ]
+		then
+			mkdir -p "$cloud_dir/camera_$i/$DATE"
+		fi
+
+	done
+	
+	for i in $(seq $CAM_NUM)
+	do
+		temp_min=$(bc <<< "$segment_duration / 60 + 1")
+		find "$temp_dir/camera_$i" -type f -mmin +$temp_min -exec mv -- '{}' "$cloud_dir/camera_$i/$DATE" \;
+		#find "$cloud_dir/camera_$i" -type f -mtime +$days_for_segment_to_live -exec rm -- '{}' \;
 	done
 
 	sleep $SLEEP_TIME
 
 	# if one cam is broken, restart all
-	#if screen -ls | grep "(Detached)"
-	#then
+	# if screen -ls | grep "(Detached)"
+	# then
+
 	killall screen
 	for i in $(seq $CAM_NUM)
 	do
@@ -174,11 +201,11 @@ do
 			-strftime 1 \
 			$temp_dir/camera_$i/record_%Y-%m-%d_%H-%M-%S.avi		> $LOGFILE
 
-		screen -list > $LOGFILE #debug
+		screen -list > $LOGFILE # debug
 
 		echo "`date +\"[%D %H:%M:%S]\"` Cam #$i(${!ADDRESS_VAR_NAME}): screen return code: $?" > $LOGFILE
 	done			
-	#fi
+	# fi
 	echo
 done
 
